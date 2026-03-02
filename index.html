@@ -59,6 +59,26 @@
             </label>
           </div>
 
+          <div class="feature-grid">
+            <label class="sound-toggle">
+              <span>节日音效</span>
+              <input id="audio-toggle" type="checkbox" checked />
+              <em id="audio-toggle-text">开启</em>
+            </label>
+          </div>
+
+          <div class="theme-filter-block">
+            <div class="theme-filter-head">
+              <span>题目分类筛选</span>
+              <div class="mini-action-row">
+                <button id="select-all-themes" class="btn btn-mini" type="button">全选</button>
+                <button id="clear-themes" class="btn btn-mini" type="button">清空</button>
+              </div>
+            </div>
+            <div id="theme-filter-box" class="theme-filter-box"></div>
+            <p class="tip">至少保留 1 个分类；不勾选将无法开始游戏。</p>
+          </div>
+
           <div id="family-config" class="family-config hidden">
             <label>
               <span>参与人数</span>
@@ -156,6 +176,21 @@
             <button id="play-again" class="btn btn-primary">再来一局</button>
             <button id="view-leaderboard-final" class="btn btn-ghost">查看排行榜</button>
           </div>
+
+          <div class="action-row poster-action-row">
+            <button id="generate-poster" class="btn btn-primary">生成分享海报</button>
+            <button id="share-result-text" class="btn btn-ghost">复制战绩文案</button>
+          </div>
+
+          <div id="poster-panel" class="poster-panel hidden">
+            <p class="tip">已生成海报，手机可长按保存，电脑可点击下载。</p>
+            <img id="poster-preview" alt="战绩海报预览" />
+            <div class="action-row">
+              <a id="download-poster" class="btn btn-primary" download="元宵灯谜战绩海报.png">下载海报</a>
+            </div>
+          </div>
+
+          <canvas id="poster-canvas" class="hidden" width="1080" height="1620"></canvas>
         </div>
       </section>
     </main>
