@@ -1,1050 +1,173 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏮 元宵猜灯谜 🏮</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+XiaoWei&display=swap');
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        :root {
-            --primary-red: #C41E3A;
-            --deep-red: #8B0000;
-            --gold: #FFD700;
-            --dark-gold: #DAA520;
-            --cream: #FFF8E7;
-            --light-gold: #FFF8DC;
-            --shadow-red: rgba(196, 30, 58, 0.3);
-        }
-        
-        body {
-            font-family: 'Noto Serif SC', 'Microsoft YaHei', serif;
-            background: linear-gradient(135deg, #1a0a0a 0%, #2d1a1a 50%, #1a0a0a 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-            color: var(--cream);
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(196, 30, 58, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255, 215, 0, 0.03) 0%, transparent 30%);
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .page {
-            display: none;
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .page.active {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .home-page { text-align: center; }
-        
-        .lantern-decoration {
-            position: absolute;
-            font-size: 60px;
-            animation: swing 3s ease-in-out infinite;
-            filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
-        }
-        
-        .lantern-left { top: 10%; left: 10%; animation-delay: 0s; }
-        .lantern-right { top: 10%; right: 10%; animation-delay: 1.5s; }
-        
-        @keyframes swing {
-            0%, 100% { transform: rotate(-5deg); }
-            50% { transform: rotate(5deg); }
-        }
-        
-        .title-container { margin-bottom: 40px; }
-        
-        .main-title {
-            font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
-            font-size: clamp(2.5rem, 8vw, 4rem);
-            color: var(--gold);
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.3), 3px 3px 6px rgba(0, 0, 0, 0.5);
-            margin-bottom: 10px;
-            letter-spacing: 8px;
-        }
-        
-        .sub-title {
-            font-size: clamp(1rem, 3vw, 1.3rem);
-            color: var(--light-gold);
-            opacity: 0.9;
-            letter-spacing: 4px;
-        }
-        
-        .game-stats {
-            background: rgba(139, 0, 0, 0.4);
-            border: 2px solid var(--gold);
-            border-radius: 15px;
-            padding: 20px 40px;
-            margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .high-score { font-size: 1.2rem; color: var(--gold); }
-        
-        .high-score-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, var(--primary-red) 0%, var(--deep-red) 100%);
-            border: 2px solid var(--gold);
-            color: var(--gold);
-            padding: 18px 50px;
-            font-size: 1.3rem;
-            font-family: 'Noto Serif SC', serif;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 20px var(--shadow-red), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            letter-spacing: 4px;
-            margin: 10px;
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px var(--shadow-red), 0 0 30px rgba(255, 215, 0, 0.3);
-        }
-        
-        .rules-btn {
-            background: transparent;
-            border: 2px solid var(--gold);
-            padding: 12px 30px;
-            font-size: 1rem;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .modal.active { display: flex; }
-        
-        .modal-content {
-            background: linear-gradient(135deg, #2d1a1a 0%, #1a0a0a 100%);
-            border: 3px solid var(--gold);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        
-        .modal-title {
-            font-size: 1.5rem;
-            color: var(--gold);
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--gold);
-            padding-bottom: 10px;
-        }
-        
-        .modal-text { line-height: 1.8; color: var(--light-gold); font-size: 0.95rem; }
-        .modal-text p { margin-bottom: 15px; }
-        
-        .modal-close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: var(--gold);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        
-        .game-page { padding: 10px; }
-        
-        .game-header {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            background: rgba(139, 0, 0, 0.5);
-            border: 2px solid var(--gold);
-            border-radius: 15px;
-            padding: 15px 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .header-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-            min-width: 80px;
-        }
-        
-        .header-label { font-size: 0.8rem; color: var(--light-gold); opacity: 0.8; margin-bottom: 5px; }
-        .header-value { font-size: 1.3rem; font-weight: bold; color: var(--gold); }
-        
-        .hearts { display: flex; gap: 5px; }
-        .heart { font-size: 1.5rem; transition: all 0.3s ease; }
-        .heart.lost { opacity: 0.3; filter: grayscale(100%); }
-        
-        .timer-container { width: 100%; max-width: 600px; margin-bottom: 20px; }
-        
-        .timer-bar {
-            height: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
-            overflow: hidden;
-            border: 1px solid var(--gold);
-        }
-        
-        .timer-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--gold) 0%, var(--dark-gold) 100%);
-            border-radius: 4px;
-            transition: width 1s linear;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-        
-        .timer-fill.warning {
-            background: linear-gradient(90deg, #ff6b6b 0%, #ff4757 100%);
-            animation: pulse 0.5s ease infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        .riddle-card {
-            width: 100%;
-            max-width: 600px;
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.6) 0%, rgba(45, 26, 26, 0.8) 100%);
-            border: 3px solid var(--gold);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 20px;
-            position: relative;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-        
-        .riddle-card::before, .riddle-card::after {
-            content: '🏮';
-            position: absolute;
-            font-size: 24px;
-            top: -12px;
-        }
-        
-        .riddle-card::before { left: 20px; }
-        .riddle-card::after { right: 20px; }
-        
-        .level-badge {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
-            color: var(--deep-red);
-            padding: 5px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-        }
-        
-        .riddle-text {
-            font-size: clamp(1.2rem, 4vw, 1.6rem);
-            line-height: 2;
-            color: var(--cream);
-            text-align: center;
-            margin: 20px 0;
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
-        }
-        
-        .riddle-category { text-align: center; color: var(--gold); font-size: 0.9rem; opacity: 0.8; margin-top: 10px; }
-        
-        .answer-section { width: 100%; max-width: 600px; }
-        .answer-input-container { position: relative; margin-bottom: 20px; }
-        
-        .answer-input {
-            width: 100%;
-            padding: 18px 20px;
-            font-size: 1.2rem;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid var(--gold);
-            border-radius: 10px;
-            color: var(--cream);
-            text-align: center;
-            font-family: 'Noto Serif SC', serif;
-            transition: all 0.3s ease;
-        }
-        
-        .answer-input:focus {
-            outline: none;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-            background: rgba(0, 0, 0, 0.5);
-        }
-        
-        .answer-input::placeholder { color: rgba(255, 248, 231, 0.5); }
-        
-        .hint-text { text-align: center; color: var(--gold); font-size: 0.9rem; margin-bottom: 15px; min-height: 24px; }
-        
-        .button-group { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-        .btn-submit { flex: 1; min-width: 120px; max-width: 200px; }
-        .btn-hint { background: transparent; padding: 15px 25px; font-size: 1rem; }
-        
-        .feedback-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            pointer-events: none;
-        }
-        
-        .feedback-overlay.active { display: flex; }
-        
-        .feedback-content { font-size: 4rem; animation: feedbackPop 0.6s ease; }
-        
-        @keyframes feedbackPop {
-            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
-            50% { transform: scale(1.2) rotate(5deg); }
-            100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-        
-        .result-page { text-align: center; }
-        
-        .result-card {
-            background: linear-gradient(135deg, rgba(139, 0, 0, 0.6) 0%, rgba(45, 26, 26, 0.8) 100%);
-            border: 3px solid var(--gold);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-        
-        .result-title { font-size: 2rem; color: var(--gold); margin-bottom: 30px; font-family: 'ZCOOL XiaoWei', serif; }
-        
-        .final-score {
-            font-size: 4rem;
-            color: var(--gold);
-            font-weight: bold;
-            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-            margin-bottom: 10px;
-        }
-        
-        .score-label { color: var(--light-gold); margin-bottom: 30px; }
-        
-        .title-badge {
-            background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
-            color: var(--deep-red);
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
-        }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
-        
-        .stat-item {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--gold);
-            border-radius: 10px;
-            padding: 15px;
-        }
-        
-        .stat-value { font-size: 1.5rem; color: var(--gold); font-weight: bold; }
-        .stat-label { font-size: 0.8rem; color: var(--light-gold); opacity: 0.8; }
-        
-        .reward-section { margin: 30px 0; padding: 20px; background: rgba(255, 215, 0, 0.1); border: 2px dashed var(--gold); border-radius: 15px; }
-        .reward-title { color: var(--gold); font-size: 1.1rem; margin-bottom: 15px; }
-        
-        .reward-card {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(218, 165, 32, 0.2) 100%);
-            border: 2px solid var(--gold);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 10px;
-        }
-        
-        .reward-icon { font-size: 3rem; margin-bottom: 10px; }
-        .reward-name { font-size: 1.2rem; color: var(--gold); font-weight: bold; margin-bottom: 10px; }
-        .reward-desc { color: var(--light-gold); font-size: 0.9rem; line-height: 1.6; }
-        
-        .share-section { margin-top: 30px; }
-        
-        .share-text {
-            color: var(--light-gold);
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            line-height: 1.6;
-        }
-        
-        .combo-display {
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2rem;
-            color: var(--gold);
-            font-weight: bold;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 50;
-            pointer-events: none;
-        }
-        
-        .combo-display.active { opacity: 1; animation: comboBounce 0.5s ease; }
-        
-        @keyframes comboBounce {
-            0%, 100% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.2); }
-        }
-        
-        @media (max-width: 480px) {
-            .game-header { padding: 10px; }
-            .header-item { min-width: 60px; }
-            .header-value { font-size: 1rem; }
-            .riddle-card { padding: 20px; }
-            .riddle-text { font-size: 1.1rem; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .button-group { flex-direction: column; }
-            .btn-submit, .btn-hint { max-width: 100%; width: 100%; }
-        }
-        
-        .shake { animation: shake 0.5s ease; }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        
-        .golden-glow { animation: goldenGlow 1s ease; }
-        
-        @keyframes goldenGlow {
-            0%, 100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
-            50% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.8); }
-        }
-        
-        .particles { position: absolute; width: 100%; height: 100%; pointer-events: none; }
-        
-        .particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: var(--gold);
-            border-radius: 50%;
-            animation: particleFloat 1s ease-out forwards;
-        }
-        
-        @keyframes particleFloat {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
-        }
-    </style>
-</head>
-<body>
-    <div class="page home-page active" id="homePage">
-        <div class="lantern-decoration lantern-left">🏮</div>
-        <div class="lantern-decoration lantern-right">🏮</div>
-        
-        <div class="title-container">
-            <h1 class="main-title">元宵猜灯谜</h1>
-            <p class="sub-title">欢乐团圆夜 · 智慧大挑战</p>
-        </div>
-        
-        <div class="game-stats">
-            <div class="high-score">历史最高分</div>
-            <div class="high-score-value" id="highScore">0</div>
-        </div>
-        
-        <button class="btn" id="startBtn">开始挑战</button>
-        <button class="btn rules-btn" id="rulesBtn">游戏规则</button>
-    </div>
-    
-    <div class="page game-page" id="gamePage">
-        <div class="game-header">
-            <div class="header-item">
-                <span class="header-label">关卡</span>
-                <span class="header-value" id="levelDisplay">1/10</span>
-            </div>
-            <div class="header-item">
-                <span class="header-label">得分</span>
-                <span class="header-value" id="scoreDisplay">0</span>
-            </div>
-            <div class="header-item">
-                <span class="header-label">生命</span>
-                <div class="hearts" id="heartsDisplay">
-                    <span class="heart">❤️</span><span class="heart">❤️</span><span class="heart">❤️</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="timer-container">
-            <div class="timer-bar">
-                <div class="timer-fill" id="timerFill" style="width: 100%;"></div>
-            </div>
-        </div>
-        
-        <div class="riddle-card" id="riddleCard">
-            <div class="level-badge" id="levelBadge">入门</div>
-            <div class="riddle-text" id="riddleText">准备开始...</div>
-            <div class="riddle-category" id="riddleCategory"></div>
-        </div>
-        
-        <div class="answer-section">
-            <div class="hint-text" id="hintText"></div>
-            <div class="answer-input-container">
-                <input type="text" class="answer-input" id="answerInput" placeholder="请输入答案" autocomplete="off">
-            </div>
-            <div class="button-group">
-                <button class="btn btn-submit" id="submitBtn">提交答案</button>
-                <button class="btn btn-hint" id="hintBtn">💡 提示 (-10分)</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="page result-page" id="resultPage">
-        <div class="result-card">
-            <h2 class="result-title">🎉 挑战完成 🎉</h2>
-            <div class="final-score" id="finalScore">0</div>
-            <div class="score-label">最终得分</div>
-            <div class="title-badge" id="titleBadge">🏮 灯谜新手</div>
-            
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="correctCount">0</div>
-                    <div class="stat-label">答对题数</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="comboMax">0</div>
-                    <div class="stat-label">最高连击</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="accuracy">0%</div>
-                    <div class="stat-label">正确率</div>
-                </div>
-            </div>
-            
-            <div class="reward-section" id="rewardSection">
-                <div class="reward-title">🎁 恭喜获得奖励卡</div>
-                <div class="reward-card">
-                    <div class="reward-icon" id="rewardIcon">🎭</div>
-                    <div class="reward-name" id="rewardName">表演卡</div>
-                    <div class="reward-desc" id="rewardDesc">任务：学一种动物的叫声，让家人猜猜是什么动物！</div>
-                </div>
-            </div>
-            
-            <div class="share-section">
-                <div class="share-text" id="shareText">我在元宵灯谜挑战中获得了【灯谜新手】称号，得分0分！快来挑战吧~ 🏮</div>
-                <button class="btn" id="shareBtn">📤 分享成绩</button>
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <button class="btn" id="restartBtn">再玩一次</button>
-                <button class="btn rules-btn" id="homeBtn">返回首页</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="combo-display" id="comboDisplay">🔥 <span id="comboNumber">3</span> 连击！</div>
-    
-    <div class="feedback-overlay" id="feedbackOverlay">
-        <div class="particles" id="particles"></div>
-        <div class="feedback-content" id="feedbackContent">✨</div>
-    </div>
-    
-    <div class="modal" id="rulesModal">
-        <div class="modal-content">
-            <button class="modal-close" id="closeRulesBtn">×</button>
-            <h3 class="modal-title">📜 游戏规则</h3>
-            <div class="modal-text">
-                <p><strong>🎯 游戏目标：</strong>在规定时间内猜出灯谜答案，获得尽可能多的积分！</p>
-                <p><strong>❤️ 生命值：</strong>初始3颗心，答错一题扣除1颗心，心耗尽则游戏结束。</p>
-                <p><strong>⏰ 时间限制：</strong>每道题限时30-45秒，剩余时间越多，额外奖励越高！</p>
-                <p><strong>💰 积分规则：</strong>答对基础分100分 + 时间奖励 + 连击奖励 + 通关奖励</p>
-                <p><strong>💡 提示功能：</strong>消耗10积分可获得提示（显示答案第一个字或字数）。</p>
-                <p><strong>🏆 称号等级：</strong>0-500分灯谜新手 / 501-1500分猜谜达人 / 1501-3000分智慧之星 / 3000+灯谜大师</p>
-                <p><strong>🎁 奖励卡：</strong>完成挑战可获得趣味任务卡！</p>
-                <p style="margin-top: 20px; text-align: center; color: #FFD700;"><strong>祝您游戏愉快，元宵节快乐！🏮</strong></p>
-            </div>
-        </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>元宵猜灯谜大闯关</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="festival-bg" aria-hidden="true">
+      <span class="lantern lantern-left"></span>
+      <span class="lantern lantern-right"></span>
+      <span class="spark spark-1"></span>
+      <span class="spark spark-2"></span>
+      <span class="spark spark-3"></span>
     </div>
 
-    <script>
-        const riddlesDB = [
-            { id: 1, question: "一口咬掉牛尾巴", answer: "告", difficulty: "easy", category: "字谜" },
-            { id: 2, question: "山上还有山", answer: "出", difficulty: "easy", category: "字谜" },
-            { id: 3, question: "十张口，一颗心", answer: "思", difficulty: "easy", category: "字谜" },
-            { id: 4, question: "一只黑狗，不叫不吼", answer: "默", difficulty: "easy", category: "字谜" },
-            { id: 5, question: "差一点六斤", answer: "兵", difficulty: "easy", category: "字谜" },
-            { id: 6, question: "家中添一口", answer: "豪", difficulty: "easy", category: "字谜" },
-            { id: 7, question: "四面都是山，山山都相连", answer: "田", difficulty: "easy", category: "字谜" },
-            { id: 8, question: "种花要除草，一人靠一刀", answer: "化", difficulty: "easy", category: "字谜" },
-            { id: 9, question: "身穿花衣爱打扮，一对翅膀光闪闪，不会唱歌爱跳舞，花丛里面玩得欢", answer: "蝴蝶", difficulty: "easy", category: "动物" },
-            { id: 10, question: "耳朵长，尾巴短，只吃菜，不吃饭", answer: "兔子", difficulty: "easy", category: "动物" },
-            { id: 11, question: "八只脚，抬面鼓，两把剪刀鼓前舞，生来横行又霸道，嘴里常把泡沫吐", answer: "螃蟹", difficulty: "easy", category: "动物" },
-            { id: 12, question: "头戴红帽子，身穿白袍子，走路摆架子，说话伸脖子", answer: "鹅", difficulty: "easy", category: "动物" },
-            { id: 13, question: "会飞不是鸟，两翅没羽毛，白天休息晚活动，捕捉蚊虫本领高", answer: "蝙蝠", difficulty: "easy", category: "动物" },
-            { id: 14, question: "面孔像猫，起飞像鸟，天天上夜班，捉鼠本领高", answer: "猫头鹰", difficulty: "easy", category: "动物" },
-            { id: 15, question: "小小年纪，却有胡子一把，不论谁见，总是大喊妈妈", answer: "羊", difficulty: "easy", category: "动物" },
-            { id: 16, question: "看看没有，摸摸倒有，似冰不化，似水不流", answer: "镜子", difficulty: "easy", category: "物品" },
-            { id: 17, question: "独木造高楼，没瓦没砖头，人在水下走，水在人上流", answer: "雨伞", difficulty: "easy", category: "物品" },
-            { id: 18, question: "身穿绿衣裳，肩扛两把刀，庄稼地里走，害虫吓得跑", answer: "螳螂", difficulty: "easy", category: "动物" },
-            { id: 19, question: "紫色树，开紫花，开过紫花结紫瓜，紫瓜里面装芝麻", answer: "茄子", difficulty: "easy", category: "植物" },
-            { id: 20, question: "身体细长，兄弟成双，光爱吃菜，不爱喝汤", answer: "筷子", difficulty: "easy", category: "物品" },
-            { id: 21, question: "圆圆脸儿像苹果，又酸又甜营养多，既能做菜吃，又能当水果", answer: "番茄", difficulty: "easy", category: "植物" },
-            { id: 22, question: "小小诸葛亮，独坐中军帐，摆下八卦阵，专捉飞来将", answer: "蜘蛛", difficulty: "easy", category: "动物" },
-            { id: 23, question: "白嫩小宝宝，洗澡吹泡泡，洗洗身体小，再洗不见了", answer: "香皂", difficulty: "easy", category: "物品" },
-            { id: 24, question: "屋子方方，有门没窗，屋外热烘，屋里冰霜", answer: "冰箱", difficulty: "easy", category: "物品" },
-            { id: 25, question: "四四方方一座城，城里住着十万兵，派出八千去打仗，剩下二万守城门", answer: "算盘", difficulty: "easy", category: "物品" },
-            { id: 26, question: "身穿绿衣裳，肚里水汪汪，生的子儿多，个个黑脸膛", answer: "西瓜", difficulty: "easy", category: "植物" },
-            { id: 27, question: "一个黄妈妈，生性手段辣，老agonia愈厉害，小孩最怕它", answer: "姜", difficulty: "easy", category: "植物" },
-            { id: 28, question: "千条线，万条线，掉到水里看不见", answer: "雨", difficulty: "easy", category: "自然" },
-            { id: 29, question: "最快的速度", answer: "一日千里", difficulty: "medium", category: "成语" },
-            { id: 30, question: "最大的手术", answer: "脱胎换骨", difficulty: "medium", category: "成语" },
-            { id: 31, question: "最大的谎言", answer: "弥天大谎", difficulty: "medium", category: "成语" },
-            { id: 32, question: "最贵重的话", answer: "金玉良言", difficulty: "medium", category: "成语" },
-            { id: 33, question: "最宽的视野", answer: "一览无余", difficulty: "medium", category: "成语" },
-            { id: 34, question: "最大的差别", answer: "天壤之别", difficulty: "medium", category: "成语" },
-            { id: 35, question: "最难做的饭", answer: "无米之炊", difficulty: "medium", category: "成语" },
-            { id: 36, question: "最短的季节", answer: "一日三秋", difficulty: "medium", category: "成语" },
-            { id: 37, question: "说它是棵苗，为啥有知觉，轻轻一碰，它就把头低", answer: "含羞草", difficulty: "medium", category: "植物" },
-            { id: 38, question: "弟兄七八个，围着柱子坐，大家一分手，衣服就扯破", answer: "蒜", difficulty: "medium", category: "植物" },
-            { id: 39, question: "青皮包白肉，像个大枕头，莫听名字冷，热天菜场有", answer: "冬瓜", difficulty: "medium", category: "植物" },
-            { id: 40, question: "不是桃树却结桃，桃子里面长白毛，到了秋天桃熟了，只见白毛不见桃", answer: "棉花", difficulty: "medium", category: "植物" },
-            { id: 41, question: "脱了红袍子，是个白胖子，去了白胖子，剩个黑丸子", answer: "荔枝", difficulty: "medium", category: "植物" },
-            { id: 42, question: "有面无口，有脚无手，听人讲话，陪人吃酒", answer: "桌子", difficulty: "medium", category: "物品" },
-            { id: 43, question: "有枪不能放，有腿不能走，天天弯着腰，总在水里游", answer: "虾", difficulty: "medium", category: "动物" },
-            { id: 44, question: "一朵芙蓉顶上开，身穿盔甲墙上待，虽然不是英雄将，叫得千门万户开", answer: "公鸡", difficulty: "medium", category: "动物" },
-            { id: 45, question: "有头没有颈，身上冷冰冰，有翅不能飞，无脚也能行", answer: "鱼", difficulty: "medium", category: "动物" },
-            { id: 46, question: "白娃娃，爬黑墙，越爬个儿越变小，再也没法往上长", answer: "粉笔", difficulty: "medium", category: "物品" },
-            { id: 47, question: "又白又软，罩住人脸，白天休息，晚上上班", answer: "口罩", difficulty: "medium", category: "物品" },
-            { id: 48, question: "细腿长长脖子弯，嘴巴尖尖胃口大，天南地北都走遍，专吃害虫保庄稼", answer: "啄木鸟", difficulty: "medium", category: "动物" },
-            { id: 49, question: "有叶不开花，开花不见叶，花开百花前，飘香傲风雪", answer: "梅花", difficulty: "medium", category: "植物" },
-            { id: 50, question: "两叶花四朵，颜色白又黄，从哪里开，没人知详细", answer: "银杏", difficulty: "medium", category: "植物" },
-            { id: 51, question: "小时穿黑衣，大时穿绿袍，水里过日子，岸上来睡觉", answer: "青蛙", difficulty: "medium", category: "动物" },
-            { id: 52, question: "一条怪牛，两条圆腿，骑他肚上，抓他双角", answer: "自行车", difficulty: "medium", category: "物品" },
-            { id: 53, question: "远看像座山，近看不是山，上面水直流，下面有人走", answer: "瀑布", difficulty: "medium", category: "自然" },
-            { id: 54, question: "点点头，点点头，生来爱吃米，唱歌咯咯咯", answer: "公鸡", difficulty: "medium", category: "动物" },
-            { id: 55, question: "'但愿人长久，千里共婵娟'，婵娟指的是什么？", answer: "月亮", difficulty: "hard", category: "诗词" },
-            { id: 56, question: "'春风又绿江南岸'的下一句是？", answer: "明月何时照我还", difficulty: "hard", category: "诗词" },
-            { id: 57, question: "'天生我材必有用'出自哪位诗人的哪首诗？", answer: "李白将进酒", difficulty: "hard", category: "诗词" },
-            { id: 58, question: "中国古代'四大发明'中，与航海有关的是哪一项？", answer: "指南针", difficulty: "hard", category: "文化" },
-            { id: 59, question: "'文房四宝'指的是哪四样？", answer: "笔墨纸砚", difficulty: "hard", category: "文化" },
-            { id: 60, question: "'三十而立，四十而不惑'出自哪部经典？", answer: "论语", difficulty: "hard", category: "文化" },
-            { id: 61, question: "中国古代神话中，'女娲补天'用的是什么材料？", answer: "五色石", difficulty: "hard", category: "神话" },
-            { id: 62, question: "什么门永远关不上？", answer: "球门", difficulty: "hard", category: "脑筋急转弯" },
-            { id: 63, question: "什么布剪不断？", answer: "瀑布", difficulty: "hard", category: "脑筋急转弯" },
-            { id: 64, question: "什么海没有水？", answer: "辞海", difficulty: "hard", category: "脑筋急转弯" },
-            { id: 65, question: "什么车没有人能开？", answer: "风车", difficulty: "hard", category: "脑筋急转弯" },
-            { id: 66, question: "什么书在书店买不到？", answer: "秘书", difficulty: "hard", category: "脑筋急转弯" },
-            { id: 67, question: "什么路最窄？", answer: "冤家路窄", difficulty: "hard", category: "脑筋急转弯" },
-            { id: 68, question: "什么蛋打不烂，煮不熟，更不能吃？", answer: "零蛋", difficulty: "hard", category: "脑筋急转弯" },
-            { id: 69, question: "一年二十四节气中，白昼最长的是哪一天？", answer: "夏至", difficulty: "hard", category: "节气" },
-            { id: 70, question: "'十二生肖'中，排在龙后面的是什么动物？", answer: "蛇", difficulty: "hard", category: "文化" },
-            { id: 71, question: "中国传统节日中，'登高望远、插茱萸'是哪个节日的习俗？", answer: "重阳节", difficulty: "hard", category: "节日" },
-            { id: 72, question: "'琴棋书画'中的'棋'指的是什么棋？", answer: "围棋", difficulty: "hard", category: "文化" }
-        ];
-        
-        const rewardCards = [
-            { icon: "🎭", name: "表演卡", desc: "任务：学一种动物的叫声，让家人猜猜是什么动物！" },
-            { icon: "🎤", name: "才艺卡", desc: "任务：唱两句歌或背一首古诗给大家听！" },
-            { icon: "😜", name: "鬼脸卡", desc: "任务：做三个鬼脸，让家人拍下来！" },
-            { icon: "💝", name: "感恩卡", desc: "任务：对家人说一句感谢的话，给一个拥抱！" },
-            { icon: "🕺", name: "舞蹈卡", desc: "任务：跳一段简单的舞，让大家开心一下！" },
-            { icon: "🎨", name: "模仿卡", desc: "任务：模仿一位家人的经典动作或口头禅！" },
-            { icon: "🤣", name: "笑话卡", desc: "任务：讲一个笑话，让大家哈哈大笑！" },
-            { icon: "📸", name: "合影卡", desc: "任务：全家人一起拍一张创意合影！" }
-        ];
-        
-        let gameState = {
-            currentLevel: 1,
-            totalLevels: 10,
-            score: 0,
-            lives: 3,
-            combo: 0,
-            maxCombo: 0,
-            correctCount: 0,
-            wrongCount: 0,
-            currentRiddle: null,
-            timeLeft: 30,
-            timerInterval: null,
-            gameRiddles: [],
-            hintUsed: false
-        };
-        
-        const homePage = document.getElementById('homePage');
-        const gamePage = document.getElementById('gamePage');
-        const resultPage = document.getElementById('resultPage');
-        
-        function init() {
-            const highScore = localStorage.getItem('lanternRiddle_highScore') || 0;
-            document.getElementById('highScore').textContent = highScore;
-            
-            document.getElementById('startBtn').addEventListener('click', startGame);
-            document.getElementById('rulesBtn').addEventListener('click', () => document.getElementById('rulesModal').classList.add('active'));
-            document.getElementById('closeRulesBtn').addEventListener('click', () => document.getElementById('rulesModal').classList.remove('active'));
-            document.getElementById('rulesModal').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
-            document.getElementById('submitBtn').addEventListener('click', submitAnswer);
-            document.getElementById('hintBtn').addEventListener('click', useHint);
-            document.getElementById('answerInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') submitAnswer(); });
-            document.getElementById('restartBtn').addEventListener('click', startGame);
-            document.getElementById('homeBtn').addEventListener('click', backToHome);
-            document.getElementById('shareBtn').addEventListener('click', shareGame);
-        }
-        
-        function showPage(page) {
-            homePage.classList.remove('active');
-            gamePage.classList.remove('active');
-            resultPage.classList.remove('active');
-            page.classList.add('active');
-        }
-        
-        function startGame() {
-            gameState = {
-                currentLevel: 1,
-                totalLevels: 10,
-                score: 0,
-                lives: 3,
-                combo: 0,
-                maxCombo: 0,
-                correctCount: 0,
-                wrongCount: 0,
-                currentRiddle: null,
-                timeLeft: 30,
-                timerInterval: null,
-                gameRiddles: [],
-                hintUsed: false
-            };
-            
-            const easyRiddles = riddlesDB.filter(r => r.difficulty === 'easy');
-            const mediumRiddles = riddlesDB.filter(r => r.difficulty === 'medium');
-            const hardRiddles = riddlesDB.filter(r => r.difficulty === 'hard');
-            
-            const shuffledEasy = shuffleArray([...easyRiddles]);
-            const shuffledMedium = shuffleArray([...mediumRiddles]);
-            const shuffledHard = shuffleArray([...hardRiddles]);
-            
-            // 每关10题：入门4题 + 进阶3题 + 挑战3题
-            gameState.gameRiddles = [
-                ...shuffledEasy.slice(0, 4),
-                ...shuffledMedium.slice(0, 3),
-                ...shuffledHard.slice(0, 3)
-            ];
-            
-            showPage(gamePage);
-            loadLevel();
-        }
-        
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-        
-        function loadLevel() {
-            if (gameState.currentLevel > gameState.totalLevels || gameState.lives <= 0) {
-                endGame();
-                return;
-            }
-            
-            gameState.currentRiddle = gameState.gameRiddles[gameState.currentLevel - 1];
-            gameState.hintUsed = false;
-            
-            switch(gameState.currentRiddle.difficulty) {
-                case 'easy': gameState.timeLeft = 35; break;
-                case 'medium': gameState.timeLeft = 40; break;
-                case 'hard': gameState.timeLeft = 45; break;
-            }
-            
-            updateUI();
-            document.getElementById('answerInput').value = '';
-            document.getElementById('hintText').textContent = '';
-            document.getElementById('answerInput').focus();
-            
-            startTimer();
-        }
-        
-        function updateUI() {
-            const riddle = gameState.currentRiddle;
-            document.getElementById('levelDisplay').textContent = `${gameState.currentLevel}/${gameState.totalLevels}`;
-            document.getElementById('scoreDisplay').textContent = gameState.score;
-            
-            const heartsContainer = document.getElementById('heartsDisplay');
-            heartsContainer.innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                const heart = document.createElement('span');
-                heart.className = 'heart' + (i >= gameState.lives ? ' lost' : '');
-                heart.textContent = '❤️';
-                heartsContainer.appendChild(heart);
-            }
-            
-            const levelBadge = document.getElementById('levelBadge');
-            switch(riddle.difficulty) {
-                case 'easy': levelBadge.textContent = '🟢 入门'; break;
-                case 'medium': levelBadge.textContent = '🟡 进阶'; break;
-                case 'hard': levelBadge.textContent = '🔴 挑战'; break;
-            }
-            
-            document.getElementById('riddleText').textContent = riddle.question;
-            document.getElementById('riddleCategory').textContent = `类别：${riddle.category}`;
-        }
-        
-        function startTimer() {
-            clearInterval(gameState.timerInterval);
-            updateTimerBar();
-            
-            gameState.timerInterval = setInterval(() => {
-                gameState.timeLeft--;
-                updateTimerBar();
-                if (gameState.timeLeft <= 0) {
-                    clearInterval(gameState.timerInterval);
-                    handleTimeout();
-                }
-            }, 1000);
-        }
-        
-        function updateTimerBar() {
-            const timerFill = document.getElementById('timerFill');
-            const maxTime = gameState.currentRiddle.difficulty === 'easy' ? 35 : 
-                           gameState.currentRiddle.difficulty === 'medium' ? 40 : 45;
-            const percentage = (gameState.timeLeft / maxTime) * 100;
-            timerFill.style.width = percentage + '%';
-            
-            if (gameState.timeLeft <= 10) {
-                timerFill.classList.add('warning');
-            } else {
-                timerFill.classList.remove('warning');
-            }
-        }
-        
-        function handleTimeout() {
-            showFeedback('⏰', false);
-            gameState.wrongCount++;
-            gameState.combo = 0;
-            loseLife();
-            setTimeout(() => { gameState.currentLevel++; loadLevel(); }, 1500);
-        }
-        
-        function submitAnswer() {
-            const input = document.getElementById('answerInput');
-            const answer = input.value.trim();
-            
-            if (!answer) {
-                input.classList.add('shake');
-                setTimeout(() => input.classList.remove('shake'), 500);
-                return;
-            }
-            
-            clearInterval(gameState.timerInterval);
-            
-            const correct = checkAnswer(answer, gameState.currentRiddle.answer);
-            if (correct) handleCorrectAnswer();
-            else handleWrongAnswer();
-        }
-        
-        function checkAnswer(userAnswer, correctAnswer) {
-            const normalizedUser = userAnswer.toLowerCase().replace(/[\s,，.。!！?？]/g, '');
-            const normalizedCorrect = correctAnswer.toLowerCase().replace(/[\s,，.。!！?？]/g, '');
-            return normalizedUser === normalizedCorrect || normalizedCorrect.includes(normalizedUser) || normalizedUser.includes(normalizedCorrect);
-        }
-        
-        function handleCorrectAnswer() {
-            showFeedback('✨', true);
-            
-            const baseScore = 100;
-            const timeBonus = gameState.timeLeft * 10;
-            gameState.combo++;
-            const comboBonus = gameState.combo * 20;
-            
-            const totalScore = baseScore + timeBonus + comboBonus;
-            gameState.score += totalScore;
-            gameState.correctCount++;
-            
-            if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
-            if (gameState.combo >= 3) showCombo();
-            
-            document.getElementById('scoreDisplay').textContent = gameState.score;
-            document.getElementById('riddleCard').classList.add('golden-glow');
-            setTimeout(() => document.getElementById('riddleCard').classList.remove('golden-glow'), 1000);
-            
-            setTimeout(() => { gameState.currentLevel++; loadLevel(); }, 1500);
-        }
-        
-        function handleWrongAnswer() {
-            showFeedback('❌', false);
-            gameState.wrongCount++;
-            gameState.combo = 0;
-            
-            document.getElementById('riddleCard').classList.add('shake');
-            setTimeout(() => document.getElementById('riddleCard').classList.remove('shake'), 500);
-            
-            loseLife();
-            setTimeout(() => { gameState.currentLevel++; loadLevel(); }, 1500);
-        }
-        
-        function loseLife() {
-            gameState.lives--;
-            const hearts = document.querySelectorAll('.heart');
-            if (hearts[gameState.lives]) hearts[gameState.lives].style.opacity = '0.3';
-            if (gameState.lives <= 0) setTimeout(() => endGame(), 1000);
-        }
-        
-        function useHint() {
-            if (gameState.hintUsed) return;
-            if (gameState.score < 10) {
-                document.getElementById('hintText').textContent = '积分不足，需要10分';
-                return;
-            }
-            
-            gameState.score -= 10;
-            gameState.hintUsed = true;
-            document.getElementById('scoreDisplay').textContent = gameState.score;
-            
-            const riddle = gameState.currentRiddle;
-            let hint = '';
-            if (riddle.answer.length <= 2) {
-                hint = `提示：答案是"${riddle.answer.substring(0, 1)}"开头的${riddle.answer.length}个字`;
-            } else {
-                hint = `提示：答案是${riddle.answer.length}个字，第一个字是"${riddle.answer.substring(0, 1)}"`;
-            }
-            document.getElementById('hintText').textContent = hint;
-        }
-        
-        function showFeedback(emoji, isSuccess) {
-            const overlay = document.getElementById('feedbackOverlay');
-            const content = document.getElementById('feedbackContent');
-            const particles = document.getElementById('particles');
-            
-            content.textContent = emoji;
-            overlay.classList.add('active');
-            
-            if (isSuccess) {
-                particles.innerHTML = '';
-                for (let i = 0; i < 12; i++) {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    particle.style.left = '50%';
-                    particle.style.top = '50%';
-                    const angle = (i / 12) * 360;
-                    const distance = 100 + Math.random() * 50;
-                    particle.style.setProperty('--tx', Math.cos(angle * Math.PI / 180) * distance + 'px');
-                    particle.style.setProperty('--ty', Math.sin(angle * Math.PI / 180) * distance + 'px');
-                    particles.appendChild(particle);
-                }
-            }
-            
-            setTimeout(() => overlay.classList.remove('active'), 1000);
-        }
-        
-        function showCombo() {
-            const comboDisplay = document.getElementById('comboDisplay');
-            document.getElementById('comboNumber').textContent = gameState.combo;
-            comboDisplay.classList.add('active');
-            setTimeout(() => comboDisplay.classList.remove('active'), 1500);
-        }
-        
-        function endGame() {
-            clearInterval(gameState.timerInterval);
-            
-            const levelBonus = gameState.currentLevel * 50;
-            gameState.score += levelBonus;
-            
-            const highScore = localStorage.getItem('lanternRiddle_highScore') || 0;
-            if (gameState.score > highScore) localStorage.setItem('lanternRiddle_highScore', gameState.score);
-            
-            let title = '';
-            if (gameState.score >= 3000) title = '👑 灯谜大师';
-            else if (gameState.score >= 1500) title = '🏆 智慧之星';
-            else if (gameState.score >= 500) title = '🎆 猜谜达人';
-            else title = '🏮 灯谜新手';
-            
-            const rewardCard = rewardCards[Math.floor(Math.random() * rewardCards.length)];
-            const totalAnswered = gameState.correctCount + gameState.wrongCount;
-            const accuracy = totalAnswered > 0 ? Math.round((gameState.correctCount / totalAnswered) * 100) : 0;
-            
-            document.getElementById('finalScore').textContent = gameState.score;
-            document.getElementById('titleBadge').textContent = title;
-            document.getElementById('correctCount').textContent = gameState.correctCount;
-            document.getElementById('comboMax').textContent = gameState.maxCombo;
-            document.getElementById('accuracy').textContent = accuracy + '%';
-            document.getElementById('rewardIcon').textContent = rewardCard.icon;
-            document.getElementById('rewardName').textContent = rewardCard.name;
-            document.getElementById('rewardDesc').textContent = rewardCard.desc;
-            document.getElementById('shareText').textContent = 
-                `我在元宵灯谜挑战中获得了【${title.replace(/[👑🏆🎆🏮]/g, '').trim()}】称号，得分${gameState.score}分！快来挑战吧~ 🏮`;
-            
-            showPage(resultPage);
-        }
-        
-        function backToHome() {
-            showPage(homePage);
-            document.getElementById('highScore').textContent = localStorage.getItem('lanternRiddle_highScore') || 0;
-        }
-        
-        function shareGame() {
-            const shareText = document.getElementById('shareText').textContent;
-            if (navigator.share) {
-                navigator.share({ title: '元宵猜灯谜', text: shareText, url: window.location.href }).catch(() => copyToClipboard(shareText));
-            } else {
-                copyToClipboard(shareText);
-            }
-        }
-        
-        function copyToClipboard(text) {
-            const input = document.createElement('input');
-            input.value = text;
-            document.body.appendChild(input);
-            input.select();
-            document.execCommand('copy');
-            document.body.removeChild(input);
-            alert('分享文字已复制到剪贴板！');
-        }
-        
-        init();
-    </script>
-</body>
+    <main class="app-shell">
+      <header class="hero">
+        <p class="hero-tag">元宵节 · 欢乐互动小游戏</p>
+        <h1>元宵猜灯谜大闯关</h1>
+        <p class="hero-subtitle">
+          轻量静态网页，开箱即玩。支持闯关限时、积分连击、家庭同屏PK。
+        </p>
+      </header>
+
+      <section id="home-screen" class="screen active" aria-label="首页">
+        <div class="panel settings-panel">
+          <h2>开始游戏</h2>
+
+          <div class="mode-row">
+            <label class="radio-card selected">
+              <input type="radio" name="gameMode" value="single" checked />
+              <span>单人闯关（默认）</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="gameMode" value="family" />
+              <span>家庭同屏PK</span>
+            </label>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              <span>难度档位</span>
+              <select id="difficultyPreset">
+                <option value="child">儿童档（简单+中等）</option>
+                <option value="family" selected>家庭档（简单+中等+挑战）</option>
+                <option value="challenge">挑战档（中等+挑战）</option>
+              </select>
+            </label>
+
+            <label>
+              <span>每题限时</span>
+              <select id="questionTime">
+                <option value="15">15秒（紧张）</option>
+                <option value="20" selected>20秒（推荐）</option>
+                <option value="25">25秒（轻松）</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="family-config" class="family-config hidden">
+            <label>
+              <span>参与人数</span>
+              <select id="playerCount">
+                <option value="2" selected>2人</option>
+                <option value="3">3人</option>
+                <option value="4">4人</option>
+              </select>
+            </label>
+            <p class="tip">家庭PK模式每位玩家进行3题轮答，按总分排名。</p>
+          </div>
+
+          <div class="action-row">
+            <button id="start-game" class="btn btn-primary">开始闯关</button>
+            <button id="show-leaderboard" class="btn btn-ghost">查看排行榜</button>
+          </div>
+        </div>
+
+        <div class="panel intro-panel">
+          <h2>玩法速览</h2>
+          <ul>
+            <li>闯关模式：每关 5 题，正确率达到 60% 才能进入下一关。</li>
+            <li>积分规则：答对 +10，剩余时间越多奖励越高，连击 3 次有额外分。</li>
+            <li>趣味奖励：每通过 2 关随机触发全家互动小任务。</li>
+            <li>本地排行榜：挑战结束可记录昵称，自动保存在浏览器。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="quiz-screen" class="screen" aria-label="答题页">
+        <div class="panel quiz-panel">
+          <div class="quiz-topbar">
+            <div id="status-badge" class="status-badge">第1关</div>
+            <div class="score-row">
+              <span id="score-view">积分：0</span>
+              <span id="streak-view">连击：0</span>
+              <span id="progress-view">第1/5题</span>
+            </div>
+          </div>
+
+          <div class="timer-wrap">
+            <div class="timer-label">
+              <span>倒计时</span>
+              <strong id="timer-view">20s</strong>
+            </div>
+            <div class="timer-track">
+              <div id="timer-bar" class="timer-bar"></div>
+            </div>
+          </div>
+
+          <article class="question-card">
+            <p id="question-theme" class="question-theme">主题：字谜</p>
+            <h3 id="question-text">正在加载题目...</h3>
+            <p id="question-hint" class="question-hint">提示：—</p>
+          </article>
+
+          <div id="options-box" class="options-grid"></div>
+
+          <p id="answer-feedback" class="answer-feedback" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section id="level-result-screen" class="screen" aria-label="关卡结算">
+        <div class="panel result-panel">
+          <h2 id="level-result-title">关卡结算</h2>
+          <p id="level-result-summary"></p>
+
+          <div id="reward-card" class="reward-card hidden">
+            <h3>趣味奖励卡</h3>
+            <p id="reward-title" class="reward-title"></p>
+            <p id="reward-desc"></p>
+          </div>
+
+          <div class="action-row">
+            <button id="next-step" class="btn btn-primary">下一步</button>
+            <button id="back-home-from-level" class="btn btn-ghost">返回首页</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="final-screen" class="screen" aria-label="最终成绩">
+        <div class="panel final-panel">
+          <h2 id="final-title">闯关完成</h2>
+          <p id="final-summary"></p>
+
+          <div id="save-score-block" class="save-score-block">
+            <label>
+              <span>保存排行榜昵称</span>
+              <input id="nickname-input" maxlength="12" placeholder="输入昵称，例如：灯谜小达人" />
+            </label>
+            <button id="save-score" class="btn btn-primary">保存成绩</button>
+          </div>
+
+          <div class="action-row">
+            <button id="play-again" class="btn btn-primary">再来一局</button>
+            <button id="view-leaderboard-final" class="btn btn-ghost">查看排行榜</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="leaderboard-modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <h3>本地排行榜（单人闯关）</h3>
+        <ol id="leaderboard-list"></ol>
+        <button id="close-leaderboard" class="btn btn-ghost">关闭</button>
+      </div>
+    </div>
+
+    <script src="./app.js" type="module"></script>
+  </body>
 </html>
