@@ -2,7 +2,8 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="format-detection" content="telephone=no" />
     <title>元宵猜灯谜大闯关</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -16,6 +17,17 @@
     </div>
 
     <main class="app-shell">
+      <section id="wechat-entry" class="wechat-entry hidden" aria-label="微信打开提示">
+        <div>
+          <strong>微信内打开已优化</strong>
+          <p>建议点右上角 ··· 转发给家人，或复制链接到群聊。</p>
+        </div>
+        <div class="mini-action-row">
+          <button id="wechat-guide-btn" class="btn btn-mini" type="button">微信引导</button>
+          <button id="copy-page-link" class="btn btn-mini" type="button">复制页面链接</button>
+        </div>
+      </section>
+
       <header class="hero">
         <p class="hero-tag">元宵节 · 欢乐互动小游戏</p>
         <h1>元宵猜灯谜大闯关</h1>
@@ -200,6 +212,22 @@
         <h3>本地排行榜（单人闯关）</h3>
         <ol id="leaderboard-list"></ol>
         <button id="close-leaderboard" class="btn btn-ghost">关闭</button>
+      </div>
+    </div>
+
+    <div id="wechat-guide-modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card wechat-guide-card">
+        <h3>微信内快速打开指引</h3>
+        <ol class="wechat-guide-list">
+          <li>点击右上角 “···” 菜单。</li>
+          <li>选择“发送给朋友”或“分享到朋友圈”。</li>
+          <li>好友点击后即可直接进入 H5 游戏页面。</li>
+          <li>若你要长期保留，可点“收藏”方便下次打开。</li>
+        </ol>
+        <div class="action-row">
+          <button id="wechat-copy-link-2" class="btn btn-primary">复制页面链接</button>
+          <button id="close-wechat-guide" class="btn btn-ghost">关闭</button>
+        </div>
       </div>
     </div>
 

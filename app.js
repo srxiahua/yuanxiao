@@ -5,6 +5,7 @@ const STREAK_BONUS = 15;
 const LEADERBOARD_KEY = "lantern-riddle-leaderboard-v1";
 const AUDIO_ENABLED_KEY = "lantern-riddle-audio-enabled-v1";
 const THEME_FILTER_KEY = "lantern-riddle-theme-filter-v1";
+const PAGE_LINK_COPY_TEXT = "页面链接已复制，可以粘贴到微信聊天或群聊。";
 
 const presetDifficultyPools = {
   child: ["easy", "medium"],
@@ -24,6 +25,8 @@ const state = {
   answerLocked: false,
   audioEnabled: true,
   audioCtx: null,
+  isWeChat: false,
+  pageLink: "",
   selectedThemes: [],
   availableThemes: [],
   posterDataUrl: "",
@@ -64,6 +67,7 @@ document.addEventListener("DOMContentLoaded", init);
 async function init() {
   cacheElements();
   bindEvents();
+  initRuntimeEnvironment();
 
   try {
     const [riddleRes, rewardRes] = await Promise.all([
@@ -95,6 +99,8 @@ function cacheElements() {
   el.quizScreen = document.getElementById("quiz-screen");
   el.levelResultScreen = document.getElementById("level-result-screen");
   el.finalScreen = document.getElementById("final-screen");
+  el.wechatEntry = document.getElementById("wechat-entry");
+  el.wechatGuideModal = document.getElementById("wechat-guide-modal");
 
   el.familyConfig = document.getElementById("family-config");
   el.difficultyPreset = document.getElementById("difficultyPreset");
@@ -159,6 +165,10 @@ function bindEvents() {
   });
   document.getElementById("generate-poster").addEventListener("click", generatePoster);
   document.getElementById("share-result-text").addEventListener("click", copyResultText);
+  document.getElementById("wechat-guide-btn").addEventListener("click", openWechatGuide);
+  document.getElementById("close-wechat-guide").addEventListener("click", closeWechatGuide);
+  document.getElementById("copy-page-link").addEventListener("click", copyPageLink);
+  document.getElementById("wechat-copy-link-2").addEventListener("click", copyPageLink);
 
   el.audioToggle.addEventListener("change", () => {
     const nextEnabled = Boolean(el.audioToggle.checked);
@@ -185,6 +195,54 @@ function bindEvents() {
       closeLeaderboard();
     }
   });
+
+  el.wechatGuideModal.addEventListener("click", (event) => {
+    if (event.target === el.wechatGuideModal) {
+      closeWechatGuide();
+    }
+  });
+}
+
+function initRuntimeEnvironment() {
+  state.isWeChat = /micromessenger/i.test(window.navigator.userAgent || "");
+  state.pageLink = buildShareablePageLink();
+
+  if (state.isWeChat) {
+    el.wechatEntry.classList.remove("hidden");
+    registerWeChatBridgeHooks();
+  } else {
+    el.wechatEntry.classList.add("hidden");
+  }
+}
+
+function buildShareablePageLink() {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  return url.toString();
+}
+
+function registerWeChatBridgeHooks() {
+  document.addEventListener(
+    "WeixinJSBridgeReady",
+    () => {
+      unlockAudio();
+      tryShowWeChatMenu();
+    },
+    false,
+  );
+
+  tryShowWeChatMenu();
+}
+
+function tryShowWeChatMenu() {
+  if (!state.isWeChat) return;
+  const bridge = window.WeixinJSBridge;
+  if (!bridge || typeof bridge.invoke !== "function") return;
+  try {
+    bridge.invoke("showOptionMenu");
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function initAudioPreference() {
@@ -807,6 +865,24 @@ function closeLeaderboard() {
   el.leaderboardModal.classList.add("hidden");
 }
 
+function openWechatGuide() {
+  el.wechatGuideModal.classList.remove("hidden");
+}
+
+function closeWechatGuide() {
+  el.wechatGuideModal.classList.add("hidden");
+}
+
+async function copyPageLink() {
+  const success = await copyTextToClipboard(state.pageLink);
+  if (success) {
+    playSfx("save");
+    alert(PAGE_LINK_COPY_TEXT);
+    return;
+  }
+  alert("复制失败，请手动复制浏览器地址栏链接。");
+}
+
 function getAudioContext() {
   if (state.audioCtx) {
     return state.audioCtx;
@@ -994,21 +1070,40 @@ async function copyResultText() {
     return;
   }
 
-  const text = `${state.lastSession.summaryText}\n来试试《元宵猜灯谜大闯关》！`;
+  const text = `${state.lastSession.summaryText}\n来试试《元宵猜灯谜大闯关》！\n${state.pageLink}`;
+  const success = await copyTextToClipboard(text);
+  if (success) {
+    playSfx("save");
+    alert("战绩文案已复制，可以直接粘贴分享。");
+    return;
+  }
+  alert("复制失败，请长按选中文案后手动复制。");
+}
+
+async function copyTextToClipboard(text) {
+  if (!text) return false;
   try {
     await navigator.clipboard.writeText(text);
-    playSfx("save");
-    alert("战绩文案已复制，可以直接粘贴分享。");
+    return true;
   } catch (error) {
     console.error(error);
+  }
+
+  try {
     const textArea = document.createElement("textarea");
     textArea.value = text;
+    textArea.setAttribute("readonly", "readonly");
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
     document.body.appendChild(textArea);
+    textArea.focus();
     textArea.select();
-    document.execCommand("copy");
+    const copied = document.execCommand("copy");
     document.body.removeChild(textArea);
-    playSfx("save");
-    alert("战绩文案已复制，可以直接粘贴分享。");
+    return copied;
+  } catch (error) {
+    console.error(error);
+    return false;
   }
 }
 
@@ -1016,6 +1111,7 @@ function backHome() {
   stopTimer();
   state.posterDataUrl = "";
   el.posterPanel.classList.add("hidden");
+  closeWechatGuide();
   showScreen("home-screen");
 }
 

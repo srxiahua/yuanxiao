@@ -26,6 +26,8 @@ body {
 body {
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: var(--ink);
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
   background:
     radial-gradient(circle at 10% 20%, #ffecc7 0%, transparent 50%),
     radial-gradient(circle at 90% 10%, #ffdca8 0%, transparent 40%),
@@ -123,7 +125,26 @@ h3,
   position: relative;
   z-index: 1;
   width: min(960px, calc(100% - 24px));
-  margin: 24px auto 48px;
+  margin: calc(18px + env(safe-area-inset-top, 0)) auto calc(48px + env(safe-area-inset-bottom, 0));
+}
+
+.wechat-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  background: linear-gradient(180deg, #fff8e8, #ffe7bd);
+  border: 1px solid rgba(180, 32, 36, 0.28);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 20px rgba(180, 32, 36, 0.12);
+}
+
+.wechat-entry p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #7c4130;
 }
 
 .hero {
@@ -553,6 +574,17 @@ a.btn {
   line-height: 1.8;
 }
 
+.wechat-guide-card {
+  max-width: 620px;
+}
+
+.wechat-guide-list {
+  margin: 12px 0 0;
+  padding-left: 22px;
+  line-height: 1.8;
+  color: #623124;
+}
+
 .hidden {
   display: none !important;
 }
@@ -586,6 +618,14 @@ a.btn {
     margin-top: 16px;
   }
 
+  .wechat-entry {
+    flex-direction: column;
+    align-items: flex-start;
+    position: sticky;
+    top: max(8px, env(safe-area-inset-top, 0));
+    z-index: 8;
+  }
+
   .panel {
     padding: 14px;
   }
@@ -605,6 +645,7 @@ a.btn {
 
   .btn {
     width: 100%;
+    min-height: 44px;
   }
 
   .lantern {
